@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Madeira Trail Slot Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f5f2;
+    --card: #fffffe;
+    --border: #e8e3dc;
+    --text: #2d2a26;
+    --muted: #7a746b;
+    --green: #2d9d6a;
+    --yellow: #d4930d;
+    --orange: #c75b1e;
+    --red: #c43434;
+    --full: #a82222;
+    --accent: #c75b1e;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2.5rem 1.5rem 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2rem; font-weight: 400; margin-bottom: 0.3rem;
+    letter-spacing: -0.03em;
+  }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .controls {
+    display: flex; gap: 1rem; align-items: center;
+    flex-wrap: wrap; margin-bottom: 1.25rem;
+    background: var(--card); padding: 1rem 1.25rem; border-radius: 6px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(45,42,38,0.04);
+  }
+  .controls label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .controls input[type="number"] {
+    padding: 0.45rem 0.7rem; border: 1px solid var(--border);
+    border-radius: 4px; font-size: 0.875rem; font-family: inherit;
+    background: var(--bg);
+  }
+  .controls button {
+    padding: 0.5rem 1.25rem; background: var(--text); color: var(--bg);
+    border: none; border-radius: 4px; font-size: 0.825rem;
+    font-weight: 600; cursor: pointer; transition: background 0.15s;
+    font-family: inherit;
+  }
+  .controls button:hover { background: #1a1815; }
+  .controls button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .progress {
+    margin-bottom: 1rem; font-size: 0.8rem; color: var(--muted);
+    display: none; align-items: center; gap: 0.5rem;
+  }
+  .progress.active { display: flex; }
+  .spinner {
+    width: 13px; height: 13px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .legend {
+    display: flex; gap: 1.25rem; margin-bottom: 1.25rem; flex-wrap: wrap;
+    font-size: 0.72rem; color: var(--muted); font-weight: 500;
+  }
+  .legend span { display: flex; align-items: center; gap: 0.35rem; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  .trails { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 800px) { .trails { grid-template-columns: 1fr; } }
+  .trail-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 1rem 1.25rem;
+    box-shadow: 0 1px 2px rgba(45,42,38,0.03);
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .trail-card:hover {
+    box-shadow: 0 3px 12px rgba(45,42,38,0.08);
+    border-color: #d4cfc7;
+  }
+  .trail-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 0.75rem; gap: 0.5rem; flex-wrap: wrap;
+  }
+  .trail-name { font-weight: 600; font-size: 0.9rem; letter-spacing: -0.01em; }
+  .trail-status {
+    font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.55rem;
+    border-radius: 3px; white-space: nowrap;
+  }
+  .status-full { background: #fdf0f0; color: var(--full); }
+  .status-low { background: #fdf3ec; color: var(--orange); }
+  .status-medium { background: #fdf8ec; color: #9a6b00; }
+  .status-good { background: #eef8f3; color: #1d7a4e; }
+
+  .slots {
+    display: flex; gap: 2px; flex-wrap: nowrap; overflow-x: auto;
+  }
+  .slot {
+    width: 28px; height: 22px; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; font-weight: 600; color: #fff;
+    cursor: default; position: relative;
+  }
+  .slot[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: var(--bg); padding: 0.3rem 0.5rem;
+    border-radius: 3px; font-size: 0.68rem; white-space: nowrap;
+    z-index: 10; margin-bottom: 4px; font-weight: 400;
+  }
+  .slot-full { background: var(--full); }
+  .slot-low { background: var(--orange); }
+  .slot-medium { background: var(--yellow); }
+  .slot-good { background: var(--green); }
+  .slot-header { background: transparent; color: var(--muted); font-size: 0.55rem; font-weight: 500; }
+
+  .trail-filters {
+    display: none; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center;
+    margin-bottom: 1.25rem; background: var(--card); padding: 1rem 1.25rem;
+    border-radius: 6px; border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(45,42,38,0.04);
+  }
+  .trail-filters.active { display: flex; }
+  .trail-filters .filter-title {
+    font-size: 0.75rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    width: 100%; margin-bottom: 0.25rem;
+  }
+  .trail-filters label {
+    font-size: 0.82rem; display: flex; align-items: center; gap: 0.35rem;
+    cursor: pointer; user-select: none;
+  }
+  .trail-filters input[type="checkbox"] { accent-color: var(--accent); }
+  .trail-filters .toggle-all {
+    font-size: 0.72rem; color: var(--muted); cursor: pointer;
+    text-decoration: underline; margin-left: auto;
+  }
+
+  .no-data {
+    text-align: center; padding: 3rem; color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .date-label {
+    font-size: 0.68rem; color: var(--muted); margin-bottom: 0.4rem;
+    font-weight: 500;
+  }
+  .trail-meta {
+    font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>Madeira Trail Slot Finder</h1>
+<p class="subtitle">Non-resident slot availability — Simplifica Madeira reservation system</p>
+
+<div class="controls" style="font-size:0.8rem;line-height:1.6;display:block;background:#fdf8f3;border-color:var(--accent);">
+  <strong style="color:var(--text);font-size:0.82rem;">Why this exists</strong>
+  <p style="margin:0.4rem 0;color:var(--muted);">Simplifica only shows availability one trail at a time with no overview — making it tedious to compare slots across trails and dates.</p>
+  <strong style="color:var(--text);font-size:0.82rem;">How it works</strong>
+  <ul style="margin:0.4rem 0 0.6rem 1.2rem;padding:0;color:var(--muted);">
+    <li>Fetches all trails at once and displays non-resident capacity as a color-coded heatmap</li>
+    <li>Set your group size to highlight slots that can fit your party</li>
+    <li>Exact capacity per slot is not published — percentage-to-headcount conversion is approximate (~40 assumed)</li>
+    <li>Slots below your threshold are marked <strong style="color:var(--full)">×</strong></li>
+    <li>Data is cached locally for 1 hour</li>
+  </ul>
+  <span style="font-size:0.7rem;color:var(--muted);opacity:0.7;">Not affiliated with Simplifica Madeira or Governo Regional da Madeira. Data may be inaccurate or outdated. Use at your own risk — no warranties of any kind.</span>
+</div>
+
+<div class="controls">
+  <div>
+    <label>Non-residents</label><br>
+    <input type="number" id="groupSize" min="1" max="40" value="1" style="width:4rem;padding:0.45rem 0.7rem;border:1px solid var(--border);border-radius:4px;font-size:0.875rem;font-family:inherit;background:var(--bg);">
+  </div>
+  <button id="fetchBtn" onclick="fetchAll()">Reload</button>
+  <button onclick="clearCache()" style="background:transparent;color:var(--muted);border:1px solid var(--border);margin-left:auto;">Clear Cache</button>
+</div>
+
+<div class="trail-filters" id="trailFilters">
+  <span class="filter-title">Filter Trails</span>
+  <span class="toggle-all" id="toggleAll" onclick="toggleAllFilters()">Deselect all</span>
+</div>
+
+<div class="progress" id="progress">
+  <div class="spinner"></div>
+  <span id="progressText">Loading trails...</span>
+</div>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--green)"></span> 75–100%</span>
+  <span><span class="dot" style="background:var(--yellow)"></span> 40–74%</span>
+  <span><span class="dot" style="background:var(--orange)"></span> 1–39%</span>
+  <span><span class="dot" style="background:var(--full)"></span> 0% (Full)</span>
+</div>
+
+<div class="trails" id="trails">
+  <div class="no-data">Loading availability...</div>
+</div>
+
+<script>
+const API_BASE = 'https://simplifica.madeira.gov.pt/api/infoProcess';
+const PROCESS_ID = 3314695;
+const SERVICE_ID = 259;
+const CACHE_TTL = 60 * 60 * 1000;
+
+let lastResults = null;
+let lastGroupSize = 1;
+
+function cacheGet(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { ts, data } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem(key); return null; }
+    return data;
+  } catch { return null; }
+}
+
+function cacheSet(key, data) {
+  try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data })); } catch {}
+}
+
+function clearCache() {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('madeira_'));
+  keys.forEach(k => localStorage.removeItem(k));
+  alert(`Cleared ${keys.length} cached items.`);
+}
+
+async function cachedFetch(url, cacheKey) {
+  const cached = cacheGet(cacheKey);
+  if (cached) return cached;
+  const res = await fetch(url);
+  const json = await res.json();
+  cacheSet(cacheKey, json);
+  return json;
+}
+
+// Assumed max non-resident capacity per slot
+const ASSUMED_CAPACITY = 40;
+
+function minPctForGroup(count) {
+  return Math.ceil((count / ASSUMED_CAPACITY) * 100);
+}
+
+function parseNonResident(slotTitle) {
+  const m = slotTitle.match(/(\d+)%\s*N[ãa]o residentes/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function slotClass(pct, threshold) {
+  if (pct < threshold) return 'slot-full';
+  if (pct < threshold + 20) return 'slot-low';
+  if (pct < threshold + 50) return 'slot-medium';
+  return 'slot-good';
+}
+
+function statusClass(minPct, threshold) {
+  if (minPct < threshold) return 'status-full';
+  if (minPct < threshold + 20) return 'status-low';
+  if (minPct < threshold + 50) return 'status-medium';
+  return 'status-good';
+}
+
+function statusLabel(minPct, avgPct, threshold) {
+  if (minPct < threshold && avgPct < threshold) return 'No Space';
+  if (minPct < threshold) return 'Mostly Full';
+  if (avgPct < threshold + 20) return 'Limited';
+  if (avgPct < threshold + 50) return 'Moderate';
+  return 'Available';
+}
+
+async function fetchAll() {
+  const btn = document.getElementById('fetchBtn');
+  const prog = document.getElementById('progress');
+  const progText = document.getElementById('progressText');
+  const trailsContainer = document.getElementById('trails');
+  btn.disabled = true;
+  prog.classList.add('active');
+  progText.textContent = 'Fetching trail list...';
+
+  try {
+    const listData = await cachedFetch(
+      `${API_BASE}/${SERVICE_ID}/resources?processId=${PROCESS_ID}`,
+      `madeira_trails_list`
+    );
+    const trails = listData.data;
+
+    // Show preview cards immediately
+    trailsContainer.innerHTML = trails
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(t => `
+        <div class="trail-card" id="card-${t.id}" style="opacity:0.5;">
+          <div class="trail-header">
+            <span class="trail-name">${t.name}</span>
+            <span class="trail-status" style="color:var(--muted);background:var(--bg);">Loading…</span>
+          </div>
+        </div>
+      `).join('');
+
+    progText.textContent = `Loading 0/${trails.length} trails...`;
+
+    const results = [];
+    const batchSize = 6;
+    for (let i = 0; i < trails.length; i += batchSize) {
+      const batch = trails.slice(i, i + batchSize);
+      const promises = batch.map(t =>
+        cachedFetch(
+          `${API_BASE}/${PROCESS_ID}/resources/${t.id}/configuration`,
+          `madeira_trail_${t.id}`
+        )
+          .then(d => ({ trail: t, config: d.data }))
+          .catch(() => ({ trail: t, config: null }))
+      );
+      const batchResults = await Promise.all(promises);
+      results.push(...batchResults);
+      progText.textContent = `Loading ${Math.min(i + batchSize, trails.length)}/${trails.length} trails...`;
+    }
+
+    const groupSize = parseInt(document.getElementById('groupSize').value) || 1;
+    lastResults = results;
+    lastGroupSize = groupSize;
+    populateFilters(results);
+    applyFilters();
+  } catch (e) {
+    document.getElementById('trails').innerHTML = `<div class="no-data">Error: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    prog.classList.remove('active');
+  }
+}
+
+function populateFilters(results) {
+  const container = document.getElementById('trailFilters');
+  // Remove old checkboxes (keep title + toggle)
+  container.querySelectorAll('label').forEach(l => l.remove());
+  const names = results
+    .filter(r => r.config && r.config.intervals)
+    .map(r => r.trail.name)
+    .sort((a, b) => a.localeCompare(b));
+  const toggle = document.getElementById('toggleAll');
+  names.forEach(name => {
+    const lbl = document.createElement('label');
+    lbl.innerHTML = `<input type="checkbox" checked value="${name}"> ${name}`;
+    lbl.querySelector('input').addEventListener('change', applyFilters);
+    container.insertBefore(lbl, toggle);
+  });
+  container.classList.add('active');
+}
+
+function toggleAllFilters() {
+  const container = document.getElementById('trailFilters');
+  const boxes = container.querySelectorAll('input[type="checkbox"]');
+  const allChecked = [...boxes].every(b => b.checked);
+  boxes.forEach(b => b.checked = !allChecked);
+  document.getElementById('toggleAll').textContent = allChecked ? 'Select all' : 'Deselect all';
+  applyFilters();
+}
+
+function applyFilters() {
+  if (!lastResults) return;
+  const container = document.getElementById('trailFilters');
+  const boxes = container.querySelectorAll('input[type="checkbox"]');
+  const selected = new Set([...boxes].filter(b => b.checked).map(b => b.value));
+  const allChecked = [...boxes].every(b => b.checked);
+  document.getElementById('toggleAll').textContent = allChecked ? 'Deselect all' : 'Select all';
+  const filtered = lastResults.filter(r => selected.has(r.trail.name));
+  renderTrails(filtered, lastGroupSize);
+}
+
+function renderTrails(results, groupSize) {
+  const container = document.getElementById('trails');
+  const threshold = minPctForGroup(groupSize);
+
+  const trailCards = [];
+
+  for (const { trail, config } of results) {
+    if (!config || !config.intervals) continue;
+
+    const slots = config.intervals;
+
+    if (slots.length === 0) continue;
+
+    // Extract non-resident percentages
+    const parsed = slots.map(s => {
+      const pct = parseNonResident(s.slotTitle);
+      const time = s.begin.date.substring(11, 16);
+      const date = s.begin.date.substring(0, 10);
+      return { pct, time, date };
+    }).filter(s => s.pct !== null);
+
+    if (parsed.length === 0) continue;
+
+    const min = Math.min(...parsed.map(s => s.pct));
+    const avg = Math.round(parsed.reduce((a, s) => a + s.pct, 0) / parsed.length);
+    const fitsCount = parsed.filter(s => s.pct >= threshold).length;
+
+    trailCards.push({ trail, parsed, min, avg, fitsCount });
+  }
+
+  // Sort: most fitting slots first, then by avg descending
+  trailCards.sort((a, b) => b.fitsCount - a.fitsCount || b.avg - a.avg);
+
+  if (trailCards.length === 0) {
+    container.innerHTML = '<div class="no-data">No availability data found for this date range.</div>';
+    return;
+  }
+
+  container.innerHTML = trailCards.map(({ trail, parsed, min, avg, fitsCount }) => {
+    // Group by date
+    const byDate = {};
+    parsed.forEach(s => {
+      if (!byDate[s.date]) byDate[s.date] = [];
+      byDate[s.date].push(s);
+    });
+
+    const sortedDates = Object.entries(byDate).sort();
+    // Time header from first date row
+    const timeHeaders = sortedDates[0][1].map(s =>
+      `<div class="slot slot-header">${s.time}</div>`
+    ).join('');
+
+    const datesHtml = sortedDates.map(([date, slots], i) => {
+      const dateLabel = new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+      const slotsHtml = slots.map(s =>
+        `<div class="slot ${slotClass(s.pct, threshold)}" data-tip="${s.time} — ${s.pct}%${s.pct < threshold ? ' (no space for ' + groupSize + ')' : ''}">${s.pct < threshold ? '×' : ''}</div>`
+      ).join('');
+      const header = i === 0 ? `<div class="date-label">&nbsp;</div><div class="slots">${timeHeaders}</div>` : '';
+      return `${header}<div class="date-label">${dateLabel}</div><div class="slots">${slotsHtml}</div>`;
+    }).join('');
+
+    const sClass = statusClass(min, threshold);
+    const sLabel = statusLabel(min, avg, threshold);
+
+    return `
+      <div class="trail-card">
+        <div class="trail-header">
+          <span class="trail-name">${trail.name}</span>
+          <span class="trail-status ${sClass}">${sLabel} — ${fitsCount}/${parsed.length} slots fit ${groupSize}</span>
+        </div>
+        ${datesHtml}
+        <div class="trail-meta">Min needed: ${threshold}% for ${groupSize} people (assumed cap ~${ASSUMED_CAPACITY}) • Avg: ${avg}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Auto-load on page open
+fetchAll();
+
+// Re-render when group size changes
+document.getElementById('groupSize').addEventListener('change', () => {
+  if (!lastResults) return;
+  lastGroupSize = parseInt(document.getElementById('groupSize').value) || 1;
+  applyFilters();
+});
+</script>
+</body>
+</html>
