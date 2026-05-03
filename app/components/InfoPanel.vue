@@ -17,6 +17,7 @@
       <li>Set your group size per category to highlight slots that can fit your party</li>
       <li>Exact capacity per slot is not published — percentage-to-headcount conversion is approximate (~40 assumed)</li>
       <li>Slots below your threshold are marked <strong class="text-skin-full">×</strong></li>
+      <li>Only a few days are shown — Simplifica releases slots on a rolling window, not months ahead</li>
       <li>Data is cached locally for 1 hour</li>
     </ul>
     <div class="mb-3 flex flex-wrap gap-5 text-xs font-medium text-skin-muted">
