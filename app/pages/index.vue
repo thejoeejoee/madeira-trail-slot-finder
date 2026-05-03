@@ -94,5 +94,11 @@ onMounted(() => {
         Loading availability...
       </div>
     </div>
+
+    <footer class="mt-10 border-t border-skin-border pt-4 text-center text-xs text-skin-muted">
+      Built by <a href="https://github.com/thejoeejoee" target="_blank" class="underline hover:text-skin-text">@thejoeejoee</a>
+      &middot;
+      <a href="https://github.com/thejoeejoee/madeira-trail-slot-finder" target="_blank" class="underline hover:text-skin-text">Source on GitHub</a>
+    </footer>
   </div>
 </template>
