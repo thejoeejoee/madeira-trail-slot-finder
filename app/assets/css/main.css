@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #f7f5f2;
+  --color-card: #fffffe;
+  --color-border: #e8e3dc;
+  --color-text: #2d2a26;
+  --color-muted: #7a746b;
+  --color-green: #2d9d6a;
+  --color-yellow: #d4930d;
+  --color-orange: #c75b1e;
+  --color-red: #c43434;
+  --color-full: #a82222;
+  --color-accent: #c75b1e;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-skin-bg text-skin-text;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
