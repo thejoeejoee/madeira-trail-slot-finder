@@ -13,8 +13,8 @@
       How it works
     </p>
     <ul class="mb-3 ml-5 list-disc space-y-0.5 text-skin-muted">
-      <li>Fetches all trails at once and displays non-resident capacity as a color-coded heatmap</li>
-      <li>Set your group size to highlight slots that can fit your party</li>
+      <li>Fetches all trails at once and displays availability across all categories as a color-coded heatmap</li>
+      <li>Set your group size per category to highlight slots that can fit your party</li>
       <li>Exact capacity per slot is not published — percentage-to-headcount conversion is approximate (~40 assumed)</li>
       <li>Slots below your threshold are marked <strong class="text-skin-full">×</strong></li>
       <li>Data is cached locally for 1 hour</li>
